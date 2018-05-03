@@ -65,12 +65,6 @@ int BWTEncoding(tBWTED *bwted, ifstream& inputFile, ifstream& outputFile){
     alphabet[0] = needle;
   }
   
-  
-  
-  
-  
-  
-  
   free(tmp);
   free(bwt_encoded);
   free(mtf_encoded);
