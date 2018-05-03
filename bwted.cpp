@@ -41,15 +41,15 @@ int BWTEncoding(tBWTED *bwted, ifstream& inputFile, ifstream& outputFile){
 
 typedef struct { // to remeber initial position of every character
   char c;
-  int pos;
+  size_t pos;
 }decode;
 
-bool cmpC(decode a, decode b){
+bool cmpC(decode a, decode b){  // func required to sort the struct
   return a.c < b.c;
 }
 
 int BWTDecoding(tBWTED *bwted, ifstream& inputFile, ifstream& outputFile){
-  
+  cout << "Decoding" << endl;
   const uint16_t BUFFSIZE = 8192;
   char buffer[BUFFSIZE];
   
@@ -60,7 +60,7 @@ int BWTDecoding(tBWTED *bwted, ifstream& inputFile, ifstream& outputFile){
   size_t lngth = inputFile.gcount()-1;
   cout << "Length: " << lngth << endl;
   // buffer[lngth] = '\0';
-  decode* tmp = (decode*) malloc(lngth);
+  decode* tmp = (decode*) malloc(lngth*sizeof(decode));
   char* result =  (char*) malloc(lngth);
   // cout << tmp << endl;z
   
@@ -69,17 +69,15 @@ int BWTDecoding(tBWTED *bwted, ifstream& inputFile, ifstream& outputFile){
     tmp[i].c = buffer[i];
     tmp[i].pos = i;
   }
-  // cout << endl;
-  stable_sort(tmp,tmp+lngth,cmpC);
-  
-  for (size_t i = 0; i < lngth; i++) 
-  {
-    cout << tmp[i].pos << " ";
-    // result[i] = tmp[tmp[i].pos].c;
-    // cout << result[i] ;	
-  }
   cout << endl;
-
+  stable_sort(tmp,tmp+lngth,cmpC);
+  size_t tmp_pos = 0;
+  for (size_t i = 0; i < lngth; i++) 
+  { 
+    tmp_pos = tmp[tmp_pos].pos;
+    result[i] = buffer[tmp_pos];
+  }
+  cout << result << endl;
   free(tmp);
   free(result);
   return 0;
