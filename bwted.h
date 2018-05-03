@@ -18,7 +18,7 @@ typedef struct{
   int64_t codedSize;
 }tBWTED;
 
-const uint16_t ALPHLENGTH = 256;
+const uint16_t ALPHLENGTH = 255;
 
 /* bwted – záznam o kódování
 inputFile – vstupní soubor (nekódovaný)

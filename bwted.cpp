@@ -3,7 +3,7 @@
 
 void debug_alpha(char * alph){
   for (size_t i = 0; i < ALPHLENGTH; i++){
-    cout << alph[i] << "\t";
+    cout << i << " " << alph[i] << "\t";
   }cout << endl;
 }
 
@@ -12,23 +12,24 @@ int BWTEncoding(tBWTED *bwted, ifstream& inputFile, ifstream& outputFile){
   const uint16_t BUFFSIZE = 8192;
   char buffer[BUFFSIZE];
   char alphabet[ALPHLENGTH];
+  char tmpalpha[ALPHLENGTH];
   for (size_t i = 0; i < ALPHLENGTH; i++)      // generate alphabet for MTF 
     alphabet[i] = char(i);
   
-  debug_alpha(alphabet);
 //   while (ifs.good()) {
   
   inputFile.read(buffer, BUFFSIZE);
   cout << "Read: " << inputFile.gcount() << endl;
   
-  size_t lngth = inputFile.gcount();
+  size_t lngth = inputFile.gcount()+1;
   cout << "Length: " << lngth << endl;
+  //BWT encode
   char* tmp =  (char*) malloc(lngth);
   char* bwt_encoded = (char*) malloc(lngth);
-  int original = 0;
   vector<string> permutations;
   buffer[lngth-1] = '$'; 
   memcpy(tmp, buffer, lngth);
+  memcpy(bwt_encoded, buffer, lngth);
   char last;
   for (size_t i = 0; i < lngth; i++) 
   { 
@@ -39,31 +40,41 @@ int BWTEncoding(tBWTED *bwted, ifstream& inputFile, ifstream& outputFile){
   for (size_t i = 0; i < lngth; i++) 
   { 
     bwt_encoded[i] = buffer[(lngth-(permutations[i].length())-1 + lngth) % lngth];
-    if(permutations[i].length() == lngth)
-      original = i;
   }
   cout << "***" << endl;
-  cout << bwt_encoded << "\t:" << original <<  endl;
-  int alph_index =0;
+  cout << bwt_encoded << "\t:" <<  endl;
+  // MTF encode
+  int alph_index;
   int* mtf_encoded = (int*) malloc(lngth);
   char needle;
+  // debug_alpha(alphabet);
   for (size_t i = 0; i < lngth; i++) 
   { 
+    alph_index = 0;
     while(alph_index < ALPHLENGTH)
     {
       if ((char)bwt_encoded[i] == (char)alphabet[alph_index])
       {
+        cout << "Found " << (char)bwt_encoded[i] << " aka " << (char)alphabet[alph_index] <<" at pos " << alph_index <<endl;
         break;
-        cout << "Found " << (char)bwt_encoded[i] << " at pos " << alph_index <<endl;
       }
       ++alph_index;
     }
-    cout << ++alph_index << endl;
     mtf_encoded[i] = alph_index;
-    needle = alphabet[alph_index];
-    memcpy(alphabet, alphabet+1, alph_index-1);
-    alphabet[0] = needle;
+    if (alph_index != 0)
+    {
+      needle = alphabet[alph_index];
+      memcpy(tmpalpha, alphabet, ALPHLENGTH);
+      memcpy(tmpalpha+1, alphabet, alph_index*sizeof(char));
+      tmpalpha[0] = needle;
+      memcpy(alphabet, tmpalpha, ALPHLENGTH);
+    }
   }
+  for (size_t i = 0; i < lngth; i++) 
+  {
+    cout << mtf_encoded[i] << " ";
+  }
+  cout << endl;
   
   free(tmp);
   free(bwt_encoded);
