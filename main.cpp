@@ -1,5 +1,6 @@
 #include "main.h"
 
+
 void help(){
   printf("Burrows wheeler tranformation implemented by Martin Krajnak <xkrajn02@stud.fit.vutbr.cz>:\n"
         "Usage:\t  ./bwted -i <file> -o <file> -l <file> [-c|-x|-h]\n"
@@ -28,7 +29,7 @@ void check_null(void *ptr){
 }
 
 void check_args(int argc, char **argv){
-  ps =(params *)malloc (sizeof(params));
+  ps=(params *)malloc (sizeof(params));
   check_null(ps);
   char c;
   while ((c = getopt(argc, argv, "i:o:l:cx")) != -1){
@@ -77,9 +78,21 @@ void cleanup(int sig) {
   exit(EXIT_SUCCESS);
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv) 
+{
   signal(SIGINT, cleanup);
   check_args(argc, argv);
+
+  tBWTED *BWT;
+ 
+  ifstream ifs (ps->inputFile, ifstream::binary);
+  ifstream ofs (ps->outputFile, ifstream::out);
+  
+  if (ps->compress)
+    BWTEncoding(BWT, ifs, ofs);
+  else 
+    BWTDecoding(BWT, ifs, ofs);
+
   cleanup(0);
   return 0;
 }

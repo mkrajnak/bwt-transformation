@@ -3,6 +3,15 @@
 
 #include "cstdint"
 #include "cstdio"
+#include "iostream"
+#include "string.h"
+#include "csignal"
+#include "sstream"
+#include "fstream"  
+#include "vector"
+#include "cstdbool"
+#include "algorithm" 
+using namespace std;
 
 typedef struct{
   int64_t uncodedSize;
@@ -14,13 +23,19 @@ inputFile – vstupní soubor (nekódovaný)
 outputFile – výstupní soubor (kódovaný)
 návratová hodnota – 0 kódování proběhlo v pořádku,-1 při kódování
 nastala chyba */
-int BWTEncoding(tBWTED *bwted, FILE *inputFile, FILE *outputFile);
+int BWTEncoding(tBWTED *bwted, ifstream& inputFile, ifstream& outputFile);
 
 /* bwted – záznam o dekódování
 inputFile – vstupní soubor (kódovaný)
 outputFile – výstupní soubor (dekódovaný)
 návratová hodnota – 0 dekódování proběhlo v pořádku,-1 při dekódování
 nastala chyba */
-int BWTDecoding(tBWTED *ahed, FILE *inputFile, FILE *outputFile);
+int BWTDecoding(tBWTED *bwted, ifstream& inputFile, ifstream& outputFile);
 
+#endif
+// debug output macro
+#ifdef DEBUG
+  #define dout cout
+#else
+  #define dout 0 && cout
 #endif
