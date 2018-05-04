@@ -83,15 +83,18 @@ int main(int argc, char **argv)
   signal(SIGINT, cleanup);
   check_args(argc, argv);
 
-  tBWTED *BWT;
+  tBWTED *bwted =(tBWTED *) malloc(sizeof(tBWTED));
+  check_null(bwted);
+  bwted->codedSize = 0;
+  bwted->uncodedSize = 0;
  
   ifstream ifs (ps->inputFile, ifstream::binary);
-  ifstream ofs (ps->outputFile, ifstream::out);
+  ofstream ofs (ps->outputFile, ofstream::binary);
   
   if (ps->compress)
-    BWTEncoding(BWT, ifs, ofs);
+    BWTEncoding(bwted, ifs, ofs);
   else 
-    BWTDecoding(BWT, ifs, ofs);
+    BWTDecoding(bwted, ifs, ofs);
 
   cleanup(0);
   return 0;

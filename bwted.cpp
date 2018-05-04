@@ -7,22 +7,20 @@ void debug_alpha(char * alph){
   }cout << endl;
 }
 
-int BWTEncoding(tBWTED *bwted, ifstream& inputFile, ifstream& outputFile){
+int BWTEncoding(tBWTED *bwted, ifstream& inputFile, ofstream& outputFile){
    
-  const uint16_t BUFFSIZE = 8192;
+  const uint32_t BUFFSIZE = 768775;
   char buffer[BUFFSIZE];
   char alphabet[ALPHLENGTH];
   char tmpalpha[ALPHLENGTH];
   for (size_t i = 0; i < ALPHLENGTH; i++)      // generate alphabet for MTF 
     alphabet[i] = char(i);
   
-//   while (ifs.good()) {
-  
   inputFile.read(buffer, BUFFSIZE);
-  cout << "Read: " << inputFile.gcount() << endl;
+  // cout << "Read: " << inputFile.gcount() << endl;
+  bwted->uncodedSize = inputFile.gcount();
+  size_t lngth = bwted->uncodedSize+1;
   
-  size_t lngth = inputFile.gcount()+1;
-  cout << "Length: " << lngth << endl;
   //BWT encode
   char* tmp =  (char*) malloc(lngth);
   char* bwt_encoded = (char*) malloc(lngth);
@@ -30,22 +28,21 @@ int BWTEncoding(tBWTED *bwted, ifstream& inputFile, ifstream& outputFile){
   buffer[lngth-1] = '$'; 
   memcpy(tmp, buffer, lngth);
   memcpy(bwt_encoded, buffer, lngth);
-  char last;
+  
   for (size_t i = 0; i < lngth; i++) 
   { 
     permutations.push_back(&tmp[i]);
   }
   sort(permutations.begin(), permutations.end());
-  string result = "";
   for (size_t i = 0; i < lngth; i++) 
   { 
     bwt_encoded[i] = buffer[(lngth-(permutations[i].length())-1 + lngth) % lngth];
   }
-  cout << "***" << endl;
-  cout << bwt_encoded << "\t:" <<  endl;
+  // cout << "***" << endl;
+  cout << bwt_encoded <<  endl;
   // MTF encode
   int alph_index;
-  int* mtf_encoded = (int*) malloc(lngth);
+  char* mtf_encoded = (char*) malloc(lngth);
   char needle;
   // debug_alpha(alphabet);
   for (size_t i = 0; i < lngth; i++) 
@@ -55,12 +52,12 @@ int BWTEncoding(tBWTED *bwted, ifstream& inputFile, ifstream& outputFile){
     {
       if ((char)bwt_encoded[i] == (char)alphabet[alph_index])
       {
-        cout << "Found " << (char)bwt_encoded[i] << " aka " << (char)alphabet[alph_index] <<" at pos " << alph_index <<endl;
+        // cout << "Found " << (char)bwt_encoded[i] << " aka " << (char)alphabet[alph_index] <<" at pos " << alph_index <<endl;
         break;
       }
       ++alph_index;
     }
-    mtf_encoded[i] = alph_index;
+    mtf_encoded[i] =(char)alph_index;
     if (alph_index != 0)
     {
       needle = alphabet[alph_index];
@@ -70,16 +67,17 @@ int BWTEncoding(tBWTED *bwted, ifstream& inputFile, ifstream& outputFile){
       memcpy(alphabet, tmpalpha, ALPHLENGTH);
     }
   }
-  for (size_t i = 0; i < lngth; i++) 
-  {
-    cout << mtf_encoded[i] << " ";
-  }
-  cout << endl;
-  
+  // for (size_t i = 0; i < lngth; i++) 
+  // {
+  //   cout << mtf_encoded[i] << " ";
+  // }
+  // mtf_encoded[lngth-1] = '\0';
+  outputFile.write(mtf_encoded,lngth);
   free(tmp);
   free(bwt_encoded);
   free(mtf_encoded);
   inputFile.close();
+  outputFile.close();
   return 0;
 }
 
@@ -92,38 +90,70 @@ bool cmpC(decode a, decode b){  // func required to sort the struct
   return a.c < b.c;
 }
 
-int BWTDecoding(tBWTED *bwted, ifstream& inputFile, ifstream& outputFile){
-  cout << "Decoding" << endl;
-  const uint16_t BUFFSIZE = 8192;
+int BWTDecoding(tBWTED *bwted, ifstream& inputFile, ofstream& outputFile){
+  // cout << "Decoding" << endl;
+  const uint32_t BUFFSIZE = 768771;
   char buffer[BUFFSIZE];
+  char alphabet[ALPHLENGTH];
+  char tmpalpha[ALPHLENGTH];
+  for (size_t i = 0; i < ALPHLENGTH; i++)      // generate alphabet for MTF 
+    alphabet[i] = char(i);
   
   inputFile.read(buffer, BUFFSIZE);
-  inputFile.close();
-  cout << "Read: " << inputFile.gcount() << endl;
+  
+  // cout << "Read: " << inputFile.gcount() << endl;
 
-  size_t lngth = inputFile.gcount()-1;
-  cout << "Length: " << lngth << endl;
-  // buffer[lngth] = '\0';
-  decode* tmp = (decode*) malloc(lngth*sizeof(decode));
-  char* result =  (char*) malloc(lngth);
-  // cout << tmp << endl;z
+  bwted->uncodedSize = inputFile.gcount();
+  size_t lngth = bwted->uncodedSize;
+  // cout << "Length: " << lngth << endl;
+  
+  // for (size_t i = 0; i < lngth; i++) 
+  // {
+  //   cout << buffer[i] << endl;
+  // }
+  // MTF DECODE
+  char* mtf_decoded = (char*) malloc(lngth);
   
   for (size_t i = 0; i < lngth; i++) 
+  { 
+    // cout << alphabet[(int)buffer[i]] << endl;
+    mtf_decoded[i] = alphabet[(int)buffer[i]];
+    if ((int)buffer[i] != 0)
+    {
+      memcpy(tmpalpha, alphabet, ALPHLENGTH);
+      memcpy(tmpalpha+1, alphabet, (int)buffer[i]*sizeof(char));
+      tmpalpha[0] = mtf_decoded[i];
+      memcpy(alphabet, tmpalpha, ALPHLENGTH);
+    }
+  }
+  // for (size_t i = 0; i < lngth; i++) 
+  // {
+  //   cout << mtf_decoded[i];
+  // }
+  // cout << "****" << endl;
+  // BWT decode
+  char* bwt_decoded = (char*) malloc(lngth);
+  decode* tmp = (decode*) malloc(lngth*sizeof(decode)); 
+  for (size_t i = 0; i < lngth; i++) 
   {
-    tmp[i].c = buffer[i];
+    tmp[i].c = mtf_decoded[i];
     tmp[i].pos = i;
   }
-  cout << endl;
   stable_sort(tmp,tmp+lngth,cmpC);
   size_t tmp_pos = 0;
   for (size_t i = 0; i < lngth; i++) 
   { 
     tmp_pos = tmp[tmp_pos].pos;
-    result[i] = buffer[tmp_pos];
+    bwt_decoded[i] = mtf_decoded[tmp_pos];
   }
-  cout << result << endl;
+  // cout << bwt_decoded << endl;
+  outputFile.write(bwt_decoded,lngth);
+  
+  free(mtf_decoded);
   free(tmp);
-  free(result);
+  free(bwt_decoded);
+  inputFile.close();
+  outputFile.close();
   return 0;
 }
 
