@@ -89,7 +89,7 @@ int main(int argc, char **argv)
   bwted->uncodedSize = 0;
  
   ifstream ifs (ps->inputFile, ifstream::binary);
-  ofstream ofs (ps->outputFile, ofstream::binary | ofstream::app);
+  ofstream ofs (ps->outputFile, ofstream::binary);
   
   if (ps->compress)
     BWTEncoding(bwted, ifs, ofs);

@@ -24,19 +24,20 @@ int BWTEncoding(tBWTED *bwted, ifstream& inputFile, ofstream& outputFile){
     inputFile.read(buffer, BUFFSIZE);
     cout << buffer << endl;
     cout << "Read: " << inputFile.gcount() << endl;
-    size_t lngth = inputFile.gcount()+1;
+    size_t lngth = inputFile.gcount();
     bwted->uncodedSize += lngth;
     
     //BWT encode
     tmp =  (char*) malloc(lngth);
     bwt_encoded = (char*) malloc(lngth);
     vector<string> permutations;
-    buffer[lngth-1] = '$'; 
+    buffer[lngth-1] = (char)0x03; 
     memcpy(tmp, buffer, lngth);
     memcpy(bwt_encoded, buffer, lngth);
     
     for (size_t i = 0; i < lngth; i++) 
     { 
+      cout << i << ":"<<buffer[i] << endl;
       permutations.push_back(&tmp[i]);
     }
     sort(permutations.begin(), permutations.end());
@@ -79,11 +80,6 @@ int BWTEncoding(tBWTED *bwted, ifstream& inputFile, ofstream& outputFile){
     memset(mtf_encoded, 0, lngth);
     memset(buffer, 0, BUFFSIZE);
   }
-  // for (size_t i = 0; i < lngth; i++) 
-  // {
-  //   cout << mtf_encoded[i] << " ";
-  // }
-  // mtf_encoded[lngth-1] = '\0';
   free(tmp);
   free(bwt_encoded);
   free(mtf_encoded);
@@ -121,13 +117,6 @@ int BWTDecoding(tBWTED *bwted, ifstream& inputFile, ofstream& outputFile){
     // cout << "Read: " << inputFile.gcount() << endl;
     size_t lngth = inputFile.gcount();
     bwted->uncodedSize += lngth;
-    // cout << "Length: " << lngth << endl;
-    
-    // for (size_t i = 0; i < lngth; i++) 
-    // {
-    //   cout << buffer[i] << endl;
-    // }
-    // MTF DECODE
     
     for (size_t i = 0; i < lngth; i++) 
     { 
@@ -141,12 +130,6 @@ int BWTDecoding(tBWTED *bwted, ifstream& inputFile, ofstream& outputFile){
         memcpy(alphabet, tmpalpha, ALPHLENGTH);
       }
     }
-    // for (size_t i = 0; i < lngth; i++) 
-    // {
-    //   cout << mtf_decoded[i];
-    // }
-    // cout << "****" << endl;
-    // BWT decode
     for (size_t i = 0; i < lngth; i++) 
     {
       tmp[i].c = mtf_decoded[i];
@@ -158,10 +141,11 @@ int BWTDecoding(tBWTED *bwted, ifstream& inputFile, ofstream& outputFile){
     { 
       tmp_pos = tmp[tmp_pos].pos;
       bwt_decoded[i] = mtf_decoded[tmp_pos];
-      outputFile.write(&bwt_decoded[i],1);
+      if (bwt_decoded[i] != (int)0x03)
+        outputFile.write(&bwt_decoded[i],1);
+      cout << i << ":"<<bwt_decoded[i] << endl;
+      
     }
-    // cout << "Written: " << lngth << endl;
-    
     memset(tmp, 0, lngth);
     memset(bwt_decoded, 0, lngth);
     memset(mtf_decoded, 0, lngth);
