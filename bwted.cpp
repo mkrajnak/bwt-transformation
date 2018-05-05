@@ -74,8 +74,8 @@ int BWTEncoding(tBWTED *bwted, ifstream& inputFile, ofstream& outputFile){
       }
     }
     // RLE start
-    // list<char>rle(buffer, buffer+lngth);
-    list<char>rle(mtf_encoded, mtf_encoded+lngth);
+    list<char>rle(buffer, buffer+lngth);
+    // list<char>rle(mtf_encoded, mtf_encoded+lngth);
     list<char>::iterator jt, it = rle.begin(); 
     size_t j =0;
     while ( j < rle.size())
@@ -94,7 +94,7 @@ int BWTEncoding(tBWTED *bwted, ifstream& inputFile, ofstream& outputFile){
         if(jt != rle.end()){
           rle.insert(jt,(char)tmp_c);
           rle.insert(jt,(char)26); 
-          rle.insert(jt,(char)count); 
+          rle.insert(jt,(char)count-1); 
         }
         j = distance(rle.begin(), jt); 
       } else {
@@ -183,9 +183,9 @@ int BWTDecoding(tBWTED *bwted, ifstream& inputFile, ofstream& outputFile){
     ++it;
     ++j;
   }
-  // for (auto a : rle){
-  //   cout << "c: "<< a << endl;
-  // }
+  for (auto a : rle){
+    cout << "c: "<< a << endl;
+  }
   // MTF
   unsigned char* rle_decoded = (unsigned char*) malloc(rle.size());
   it = rle.begin();
@@ -195,8 +195,9 @@ int BWTDecoding(tBWTED *bwted, ifstream& inputFile, ofstream& outputFile){
     rle_decoded[j] = *it;
     ++it;
     j++;
-  } 
-  lngth = rle.size();
+  }
+  cout << rle_decoded << endl; 
+  // lngth = rle.size();
   mtf_decoded = (unsigned char*) malloc(lngth*sizeof(unsigned char));
   tmp = (decode*) malloc(lngth*sizeof(decode)); 
   for (size_t i = 0; i < lngth; i++) 
@@ -224,8 +225,8 @@ int BWTDecoding(tBWTED *bwted, ifstream& inputFile, ofstream& outputFile){
   { 
     tmp_pos = tmp[tmp_pos].pos;
     bwt_decoded[i] = mtf_decoded[tmp_pos];
-    outputFile.write((char*)&bwt_decoded[i],1);
-
+    if (bwt_decoded[i] != (int)0x03)
+      outputFile.write((char*)&bwt_decoded[i],1);
   }
   outputFile.write("\0",1);
   cout << (char*)bwt_decoded  << endl; 
