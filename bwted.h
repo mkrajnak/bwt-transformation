@@ -11,6 +11,7 @@
 #include "vector"
 #include "cstdbool"
 #include "algorithm" 
+#include "list"
 using namespace std;
 
 typedef struct{
