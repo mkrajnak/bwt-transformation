@@ -1,79 +1,83 @@
 #include "bwted.h"
 
-
-void debug_alpha(char * alph){
+void debug_alpha(unsigned char * alph){
   for (size_t i = 0; i < ALPHLENGTH; i++){
     cout << i << " " << alph[i] << "\t";
   }cout << endl;
 }
+bool str_sort(const char *c1, const char *c2){
+    return strcmp(c1, c2) < 0;
+}
 
 int BWTEncoding(tBWTED *bwted, ifstream& inputFile, ofstream& outputFile){
-  const uint32_t BUFFSIZE = 100;
-  char buffer[BUFFSIZE];
-  char alphabet[ALPHLENGTH];
-  char tmpalpha[ALPHLENGTH];
-  char* tmp;
-  char* bwt_encoded;
-  char* mtf_encoded;
-  char tmp_c=0;
+  const uint32_t BUFFSIZE = 1000000;
+  unsigned char* buffer = (unsigned char*)malloc(sizeof(unsigned char)*BUFFSIZE);
+  unsigned char alphabet[ALPHLENGTH];
+  unsigned char tmpalpha[ALPHLENGTH];
+  unsigned char* tmp = NULL;
+  unsigned char* bwt_encoded = NULL;
+  unsigned char* mtf_encoded = NULL;
+  unsigned char tmp_c=0;
   for (size_t i = 0; i < ALPHLENGTH; i++)      // generate alphabet for MTF 
     alphabet[i] = char(i);
   
   while (inputFile.good())
   {
-    inputFile.read(buffer, BUFFSIZE);
+    inputFile.read((char *)buffer, BUFFSIZE);
     cout << "Read: " << inputFile.gcount() << endl;
     size_t lngth = inputFile.gcount();
     bwted->uncodedSize += lngth;
     
     //BWT encode
-    tmp = (char*) malloc(lngth);
-    bwt_encoded = (char*) malloc(lngth);
-    vector<string> permutations;
-    buffer[lngth-1] = (char)0x03; 
+    tmp = (unsigned char*) malloc(lngth*sizeof(unsigned char));
+    bwt_encoded = (unsigned char*) malloc(lngth*sizeof(unsigned char));
+    vector<char *> permutations;
+    buffer[lngth-1] = (unsigned char)0x03; 
     memcpy(tmp, buffer, lngth);
     memcpy(bwt_encoded, buffer, lngth);
     
     for (size_t i = 0; i < lngth; i++)// suffixes
     { 
-      cout << i << ":"<<buffer[i] << endl;
-      permutations.push_back(&tmp[i]);
+      permutations.push_back((char*)&tmp[i]);
     }
-    sort(permutations.begin(), permutations.end());
+    cout << "Done" << endl;
+    sort(permutations.begin(), permutations.end(), str_sort);
     for (size_t i = 0; i < lngth; i++) 
     { 
-      bwt_encoded[i] = buffer[(lngth-(permutations[i].length())-1 + lngth) % lngth];
+      bwt_encoded[i] = buffer[(lngth-(strlen(permutations[i]))-1 + lngth) % lngth];
+      outputFile.write((char*)&bwt_encoded[i], 1);
     }
     // cout << "***" << endl;
     cout << bwt_encoded <<  endl;
     // MTF encode
-    int alph_index;
-    mtf_encoded = (char*) malloc(lngth);
-    char needle;
-    // debug_alpha(alphabet);
-    for (size_t i = 0; i < lngth; i++) 
-    { 
-      alph_index = 0;
-      while(alph_index < ALPHLENGTH)
-      {
-        if ((char)bwt_encoded[i] == (char)alphabet[alph_index])
-        {
-          break;
-        }
-        ++alph_index;
-      }
-      mtf_encoded[i] =(char)alph_index;
-      outputFile.write(&mtf_encoded[i], 1);
-      if (alph_index != 0)
-      {
-        needle = alphabet[alph_index];
-        memcpy(tmpalpha, alphabet, ALPHLENGTH);
-        memcpy(tmpalpha+1, alphabet, alph_index*sizeof(char));
-        tmpalpha[0] = needle;
-        memcpy(alphabet, tmpalpha, ALPHLENGTH);
-      }
-    }
-    outputFile.write("\0", 1);
+    // int alph_index;
+    mtf_encoded = (unsigned char*) malloc(lngth*sizeof(unsigned char));
+    // char needle;
+    // // debug_alpha(alphabet);
+    // for (size_t i = 0; i < lngth; i++) 
+    // { 
+    //   alph_index = 0;
+    //   while(alph_index < ALPHLENGTH)
+    //   {
+    //     if ((unsigned char)bwt_encoded[i] == (unsigned char)alphabet[alph_index])
+    //     {
+    //       break;
+    //     }
+    //     ++alph_index;
+    //   }
+    //   mtf_encoded[i] = (u_char)alph_index;
+    //   cout <<(u_char)mtf_encoded[i]<< endl;
+    //     cout <<(int)alph_index<< endl;
+    //   outputFile.write((char*)&mtf_encoded[i], 1);
+    //   if (alph_index != 0)
+    //   {
+    //     needle = alphabet[alph_index];
+    //     memcpy(tmpalpha, alphabet, ALPHLENGTH);
+    //     memcpy(tmpalpha+1, alphabet, alph_index*sizeof(char));
+    //     tmpalpha[0] = needle;
+    //     memcpy(alphabet, tmpalpha, ALPHLENGTH);
+    //   }
+    // }
     // RLE start
     // list<char>rle(mtf_encoded, mtf_encoded+lngth);
     // list<char>::iterator jt, it = rle.begin(); 
@@ -139,6 +143,7 @@ int BWTEncoding(tBWTED *bwted, ifstream& inputFile, ofstream& outputFile){
     memset(buffer, 0, BUFFSIZE);
   }
   free(tmp);
+  free(buffer);
   free(bwt_encoded);
   free(mtf_encoded);
   inputFile.close();
@@ -147,7 +152,7 @@ int BWTEncoding(tBWTED *bwted, ifstream& inputFile, ofstream& outputFile){
 }
 
 typedef struct { // to remeber initial position of every character
-  char c;
+  unsigned char c;
   size_t pos;
 }decode;
 
@@ -156,30 +161,30 @@ bool cmpC(decode a, decode b){  // func required to sort the struct
 }
 
 int BWTDecoding(tBWTED *bwted, ifstream& inputFile, ofstream& outputFile){
-  // cout << "Decoding" << endl;
-  const uint32_t BUFFSIZE = 8196;
-  char buffer[BUFFSIZE];
-  char alphabet[ALPHLENGTH];
-  char tmpalpha[ALPHLENGTH];
-  decode* tmp = (decode*) malloc(BUFFSIZE*sizeof(decode)); 
-  char* bwt_decoded = (char*) malloc(BUFFSIZE);
-
+  cout << "Decoding" << endl;
+  const uint32_t BUFFSIZE = 1000000;
+  unsigned char* buffer = (unsigned char*)malloc(sizeof(unsigned char)*BUFFSIZE);
+  unsigned char alphabet[ALPHLENGTH];
+  unsigned char tmpalpha[ALPHLENGTH];
+  unsigned char* mtf_decoded = NULL;
+  decode* tmp = NULL;
+  unsigned char* bwt_decoded = NULL;
   for (size_t i = 0; i < ALPHLENGTH; i++)      // generate alphabet for MTF 
-    alphabet[i] = char(i);
+    alphabet[i] = (char)(i);
 
   while (inputFile.good())
   {
-    inputFile.read(buffer, BUFFSIZE);
+    inputFile.read((char*)buffer, BUFFSIZE);
     
-    size_t lngth = inputFile.gcount()-1;
+    size_t lngth = inputFile.gcount();
     cout << "Read: " << inputFile.gcount() << endl;
     bwted->uncodedSize += lngth;
     // RLE decode
-    // list<char>rle(buffer, buffer+lngth);
-    // list<char>::iterator jt, it = rle.begin(); 
+    // list<unsigned char>rle(buffer, buffer+lngth);
+    // list<unsigned char>::iterator jt, it = rle.begin(); 
     
     // size_t j=0;
-    // char tmp_c=0;
+    // unsigned char tmp_c=0;
     // while ( it != rle.end())
     // {
     //   cout << "c: "<< *it << endl;
@@ -207,7 +212,7 @@ int BWTDecoding(tBWTED *bwted, ifstream& inputFile, ofstream& outputFile){
     // //   cout << a << endl;
     // // }
     // // MTF
-    // char* rle_decoded = (char*) malloc(rle.size());
+    // unsigned char* rle_decoded = (unsigned char*) malloc(rle.size());
     
     // it = rle.begin();
     // j=0;
@@ -218,35 +223,38 @@ int BWTDecoding(tBWTED *bwted, ifstream& inputFile, ofstream& outputFile){
     //   j++;
     // } 
     // lngth = rle.size();
-    char* mtf_decoded = (char*) malloc(lngth);
-    for (size_t i = 0; i < lngth; i++) 
-    { 
-      // cout << alphabet[(int)buffer[i]] << endl;
-      mtf_decoded[i] = alphabet[(int)buffer[i]];
-      if ((int)buffer[i] != 0)
-      {
-        memcpy(tmpalpha, alphabet, ALPHLENGTH);
-        memcpy(tmpalpha+1, alphabet, (int)buffer[i]*sizeof(char));
-        tmpalpha[0] = mtf_decoded[i];
-        memcpy(alphabet, tmpalpha, ALPHLENGTH);
-      }
-    }
-    for (size_t i = 0; i < lngth; i++) 
+    mtf_decoded = (unsigned char*) malloc(lngth*sizeof(unsigned char));
+    decode* tmp = (decode*) malloc(lngth*sizeof(decode)); 
+    // for (size_t i = 0; i < lngth; i++) 
+    // { 
+    //   cout << alphabet[(int)buffer[i]] << endl;
+    //   mtf_decoded[i] = alphabet[(int)buffer[i]];
+    //   if ((int)buffer[i] != 0)
+    //   {
+    //     memcpy(tmpalpha, alphabet, ALPHLENGTH);
+    //     memcpy(tmpalpha+1, alphabet, (int)buffer[i]);
+    //     tmpalpha[0] = mtf_decoded[i];
+    //     memcpy(alphabet, tmpalpha, ALPHLENGTH);
+    //   }
+    // }
+    for (size_t i = 0; i < lngth; i++) // bwt
     {
-      tmp[i].c = mtf_decoded[i];
+      tmp[i].c = (unsigned char)buffer[i];
       tmp[i].pos = i;
+      if (i == lngth-1) cout << "LOG" << i << endl;
     }
     stable_sort(tmp,tmp+lngth,cmpC);
     size_t tmp_pos = 0;
+    bwt_decoded = (unsigned char*) malloc(lngth*sizeof(unsigned char));
     for (size_t i = 0; i < lngth; i++) 
     { 
       tmp_pos = tmp[tmp_pos].pos;
-      bwt_decoded[i] = mtf_decoded[tmp_pos];
-      if (bwt_decoded[i] != (int)0x03)
-        outputFile.write(&bwt_decoded[i],1);
+      bwt_decoded[i] = buffer[tmp_pos];
+      outputFile.write((char*)&bwt_decoded[i],1);
+
     }
     outputFile.write("\0",1);
-    cout << bwt_decoded  << endl; 
+    cout << (char*)bwt_decoded  << endl; 
     memset(tmp, 0, lngth);
     memset(bwt_decoded, 0, lngth);
     memset(mtf_decoded, 0, lngth);
@@ -254,6 +262,7 @@ int BWTDecoding(tBWTED *bwted, ifstream& inputFile, ofstream& outputFile){
   }
   free(tmp);
   free(bwt_decoded);
+  free(buffer);
   inputFile.close();
   outputFile.close();
   return 0;
