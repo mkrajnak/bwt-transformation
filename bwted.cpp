@@ -168,19 +168,18 @@ int BWTDecoding(tBWTED *bwted, ifstream& inputFile, ofstream& outputFile){
         j++;
         continue;
       }       
-rest = lngth - j;
-cout << "*******" << endl;       
-cout << "j " << j << endl;
-      cout << "char_cout " << char_count << endl;
-     cout << "buffer " << sizeof(buffer) << endl;
-      cout << "rest " << rest << endl;
-      cout << "lenght " << lngth << endl;
+      rest = lngth - j;
+    //   cout << "*******" << endl;       
+    //   cout << "j " << j << endl;
+    //   cout << "char_cout " << char_count << endl;
+    //  cout << "buffer " << sizeof(buffer) << endl;
+    //   cout << "rest " << rest << endl;
+    //   cout << "lenght " << lngth << endl;
 
       memcpy(&buffer[j+char_count], &buffer[j+2], rest);
       memset(&buffer[j], tmp_c, char_count);
-      lngth += char_count -2;
-cout << "new lenght " << lngth << endl;      
-j += char_count -1;
+      lngth += char_count -2;    
+      // j += char_count -1;
     }
     ++j;
     if (j >= lngth)
