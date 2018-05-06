@@ -46,7 +46,7 @@ int BWTEncoding(tBWTED *bwted, ifstream& inputFile, ofstream& outputFile){
       bwt_encoded[i] = buffer[(lngth-(strlen(permutations[i]))-1 + lngth) % lngth];
     }
     // cout << "***" << endl;
-    cout << bwt_encoded <<  endl;
+    // cout << bwt_encoded <<  endl;
     // MTF encode
     int alph_index;
     mtf_encoded = (unsigned char*) malloc(lngth*sizeof(unsigned char));
@@ -69,13 +69,14 @@ int BWTEncoding(tBWTED *bwted, ifstream& inputFile, ofstream& outputFile){
         needle = alphabet[alph_index];
         memcpy(tmpalpha, alphabet, ALPHLENGTH);
         memcpy(tmpalpha+1, alphabet, alph_index*sizeof(char));
+        // outputFile.write((char*)&mtf_encoded[i], 1);
         tmpalpha[0] = needle;
         memcpy(alphabet, tmpalpha, ALPHLENGTH);
       }
     }
     // RLE start
-    list<char>rle(buffer, buffer+lngth);
-    // list<char>rle(mtf_encoded, mtf_encoded+lngth);
+    // list<char>rle(buffer, buffer+lngth);
+    list<char>rle(mtf_encoded, mtf_encoded+lngth);
     list<char>::iterator jt, it = rle.begin(); 
     size_t j =0;
     while ( j < rle.size())
@@ -102,23 +103,17 @@ int BWTEncoding(tBWTED *bwted, ifstream& inputFile, ofstream& outputFile){
         ++jt;
       }
       it = jt;
-      // // cout << "8888888888" << endl;
-      // for (auto a : rle)
-      // {
-      //   cout << "c: " << a << endl;
-      // }
     }
     it = rle.begin();
     j=0;
     while(it != rle.end()) 
     {
       tmp_c = *it;
-      cout <<"c: " << tmp_c << endl;
       outputFile.write((char*)&tmp_c, 1);
       ++it;
       j++;
     } 
-   
+    bwted->codedSize = j;
     cout << "Written: " << j << endl;
     memset(tmp, 0, lngth);
     memset(bwt_encoded, 0, lngth);
@@ -159,12 +154,11 @@ int BWTDecoding(tBWTED *bwted, ifstream& inputFile, ofstream& outputFile){
   size_t lngth = inputFile.gcount();
   // for (size_t i = 0; i < lngth; i++)      // generate alphabet for MTF 
   //   cout << i << " : " << buffer[i] << endl; 
-  // cout << "Read: " << inputFile.gcount() << endl;
+  cout << "Read: " << lngth << endl;
   bwted->uncodedSize += lngth;
   // RLE decode
   list<char>rle(buffer, buffer+lngth);
   list<char>::iterator jt, it = rle.begin(); 
-  
   size_t j=0;
   unsigned char tmp_c=0;
   while ( it != rle.end())
@@ -183,10 +177,11 @@ int BWTDecoding(tBWTED *bwted, ifstream& inputFile, ofstream& outputFile){
     ++it;
     ++j;
   }
-  for (auto a : rle){
-    cout << "c: "<< a << endl;
-  }
+  // for (auto a : rle){
+  //   cout << "c: "<< a << endl;
+  // }
   // MTF
+  cout << "List" << endl;
   unsigned char* rle_decoded = (unsigned char*) malloc(rle.size());
   it = rle.begin();
   j=0;
@@ -197,17 +192,17 @@ int BWTDecoding(tBWTED *bwted, ifstream& inputFile, ofstream& outputFile){
     j++;
   }
   cout << rle_decoded << endl; 
-  // lngth = rle.size();
+  lngth = rle.size();
   mtf_decoded = (unsigned char*) malloc(lngth*sizeof(unsigned char));
   tmp = (decode*) malloc(lngth*sizeof(decode)); 
   for (size_t i = 0; i < lngth; i++) 
   { 
     // cout << alphabet[(int)buffer[i]] << endl;
-    mtf_decoded[i] = alphabet[(int)buffer[i]];
-    if ((int)buffer[i] != 0)
+    mtf_decoded[i] = alphabet[(int)rle_decoded[i]];
+    if ((int)rle_decoded[i] != 0)
     {
       memcpy(tmpalpha, alphabet, ALPHLENGTH);
-      memcpy(tmpalpha+1, alphabet, (int)buffer[i]);
+      memcpy(tmpalpha+1, alphabet, (int)rle_decoded[i]);
       tmpalpha[0] = mtf_decoded[i];
       memcpy(alphabet, tmpalpha, ALPHLENGTH);
     }
