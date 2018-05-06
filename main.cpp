@@ -31,6 +31,9 @@ void check_null(void *ptr){
 void check_args(int argc, char **argv){
   ps=(params *)malloc (sizeof(params));
   check_null(ps);
+  ps->inputFile = NULL;
+  ps->outputFile = NULL;
+  ps->logFile = NULL;
   char c;
   while ((c = getopt(argc, argv, "i:o:l:cx")) != -1){
     switch (c) {
@@ -82,7 +85,7 @@ int main(int argc, char **argv)
 {
   signal(SIGINT, cleanup);
   check_args(argc, argv);
-
+  
   tBWTED *bwted =(tBWTED *) malloc(sizeof(tBWTED));
   check_null(bwted);
   bwted->codedSize = 0;
