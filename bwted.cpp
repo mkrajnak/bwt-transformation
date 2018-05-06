@@ -93,7 +93,7 @@ int BWTEncoding(tBWTED *bwted, ifstream& inputFile, ofstream& outputFile){
       jt = rle.erase(jt,it);
       if(jt != rle.end()){
         rle.insert(jt,(char)tmp_c);
-        rle.insert(jt,(char)26); 
+        rle.insert(jt,(char)29); 
         rle.insert(jt,(char)count-1); 
       }
       j = distance(rle.begin(), jt); 
@@ -153,30 +153,34 @@ int BWTDecoding(tBWTED *bwted, ifstream& inputFile, ofstream& outputFile){
     alphabet[i] = (char)(i);
 
   inputFile.read((char*)buffer, BUFFSIZE);
-  size_t lngth = inputFile.gcount();
+ uint64_t lngth = inputFile.gcount();
   bwted->uncodedSize = lngth;
   // cout << lngth << endl;
-  size_t j =0;
+  uint64_t j =0;
+  uint64_t rest = 0;
   while( j <BUFFSIZE )
   {
-    if(buffer[j] == (char)26)
+    if(buffer[j] == (char)29)
     {
       tmp_c = buffer[j-1];
       char_count = (int)buffer[j+1];
-      if (char_count <=0){ // bugfix
+     if (char_count <=0){ // bugfix
         j++;
         continue;
-      } 
-      size_t rest = lngth - j;
-      // cout << "j " << j << endl;
-      // cout << "char_cout " << char_count << endl;
-      // cout << "buffer " << sizeof(buffer) << endl;
-      // cout << "rest " << rest << endl;
-      
+      }       
+rest = lngth - j;
+cout << "*******" << endl;       
+cout << "j " << j << endl;
+      cout << "char_cout " << char_count << endl;
+     cout << "buffer " << sizeof(buffer) << endl;
+      cout << "rest " << rest << endl;
+      cout << "lenght " << lngth << endl;
+
       memcpy(&buffer[j+char_count], &buffer[j+2], rest);
       memset(&buffer[j], tmp_c, char_count);
       lngth += char_count -2;
-      j += char_count -1;
+cout << "new lenght " << lngth << endl;      
+j += char_count -1;
     }
     ++j;
     if (j >= lngth)
