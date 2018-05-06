@@ -174,7 +174,6 @@ int BWTDecoding(tBWTED *bwted, ifstream& inputFile, ofstream& outputFile){
       // cout << "rest " << rest << endl;
       
       memcpy(&buffer[j+char_count], &buffer[j+2], rest);
-      cout << "fail" << endl;
       memset(&buffer[j], tmp_c, char_count);
       lngth += char_count -2;
       j += char_count -1;
