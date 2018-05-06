@@ -91,10 +91,30 @@ int main(int argc, char **argv)
   ifstream ifs (ps->inputFile, ifstream::binary);
   ofstream ofs (ps->outputFile, ofstream::binary);
   
+
   if (ps->compress)
     BWTEncoding(bwted, ifs, ofs);
   else 
     BWTDecoding(bwted, ifs, ofs);
+  
+  if(ps->logFile){
+    ofstream lfl (ps->logFile, ofstream::out);
+    if(ps->compress)
+      lfl.write("Encoding\n",strlen("Encoding\n"));
+    else
+      lfl.write("Decoding\n",strlen("Decoding\n"));
+    
+    lfl.write("Read ",strlen("Read "));
+    string tmp = to_string(bwted->uncodedSize);
+    lfl.write(tmp.c_str(),sizeof(tmp.c_str()));
+    lfl.write("\n",strlen("\n"));
+    
+    lfl.write("Written ",strlen("Written "));
+    string tmp2 = to_string(bwted->codedSize);
+    lfl.write(tmp2.c_str(),sizeof(tmp2.c_str()));
+    lfl.write("\n",strlen("\n"));
+    lfl.close();
+  }
 
   cleanup(0);
   return 0;
